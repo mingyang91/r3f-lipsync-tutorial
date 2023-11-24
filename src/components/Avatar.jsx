@@ -9,49 +9,120 @@ import { useControls } from "leva";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import * as THREE from "three";
+import { createAudioPlaySubject } from "../utils/player";
+import { listenerStream } from "../utils/listener-stream"
 
-const corresponding = {
-  A: "viseme_PP",
-  B: "viseme_kk",
-  C: "viseme_I",
-  D: "viseme_AA",
-  E: "viseme_O",
-  F: "viseme_U",
-  G: "viseme_FF",
-  H: "viseme_TH",
-  X: "viseme_PP",
-};
+const mapping = {
+  "@": "viseme_sil",    // This usually represents a schwa or neutral vowel. Mapping to silence as a neutral position.
+  "sil": "viseme_sil",
+  "p": "viseme_PP",
+  "b": "viseme_PP",
+  "m": "viseme_PP",
+  "f": "viseme_FF",
+  "v": "viseme_FF",
+  "T": "viseme_TH",     // Represents "th" in ARPAbet
+  "dh": "viseme_TH",
+  "t": "viseme_DD",
+  "d": "viseme_DD",
+  "k": "viseme_kk",
+  "g": "viseme_kk",
+  "ng": "viseme_kk",
+  "ch": "viseme_CH",
+  "j": "viseme_CH",
+  "s": "viseme_SS",
+  "z": "viseme_SS",
+  "sh": "viseme_SS",
+  "zh": "viseme_SS",
+  "n": "viseme_nn",
+  "r": "viseme_RR",
+  "er": "viseme_RR",
+  "a": "viseme_aa",
+  "aa": "viseme_aa",
+  "ax": "viseme_aa",
+  "ah": "viseme_aa",
+  "ae": "viseme_E",
+  "ey": "viseme_E",
+  "eh": "viseme_E",
+  "ih": "viseme_I",
+  "ix": "viseme_I",
+  "aw": "viseme_O",
+  "ow": "viseme_O",
+  "ao": "viseme_O",
+  "oy": "viseme_O",
+  "uw": "viseme_U",
+  "uh": "viseme_U",
+  "w": "viseme_U",
+  "y": "viseme_U",
+  "o": "viseme_O",     // Based on the sound of the phoneme
+  "e": "viseme_E",     // Based on the sound of the phoneme
+  "S": "viseme_SS",    // Represents "sh" in ARPAbet
+  "u": "viseme_U",     // Based on the sound of the phoneme
+  "E": "viseme_E",     // Based on the sound of the phoneme
+  "i": "viseme_I"      // Based on the sound of the phoneme
+}
+
 
 export function Avatar(props) {
   const {
+    startRecording,
+    startListening,
     playAudio,
     script,
     headFollow,
     smoothMorphTarget,
     morphTargetSmoothing,
   } = useControls({
+    startRecording: false,
+    startListening: false,
     playAudio: false,
     headFollow: true,
     smoothMorphTarget: true,
     morphTargetSmoothing: 0.5,
     script: {
       value: "welcome",
-      options: ["welcome", "pizzas"],
+      options: ["welcome", "pizzas", "example"],
     },
   });
 
   const audio = useMemo(() => new Audio(`/audios/${script}.mp3`), [script]);
+  const [visemes, setVisemes] = useState([]);
+  const [startTime, setStartTime] = useState(Date.now());
+  useEffect(() => {
+    if (startListening) {
+      const player$ = createAudioPlaySubject()
+      const ws$ = listenerStream()
+      ws$.subscribe({
+        next(msg) { 
+          if (msg.data instanceof Blob) {
+            player$.next(msg.data)
+          } else {
+              const evt = JSON.parse(msg.data)
+              if (evt.type === 'Translation') {
+                  console.log("translation:", evt.content)
+              } else if (evt.type === 'original') {
+                  console.log("transcription:", evt.content)
+              } else {
+                setVisemes(evt.visemes)
+                setStartTime(Date.now())
+              }
+          }
+        }
+      })
+      return () => {
+        ws$.unsubscribe()
+        player$.unsubscribe()
+      }
+    }
+  }, [startListening]);
+
   const jsonFile = useLoader(THREE.FileLoader, `audios/${script}.json`);
   const lipsync = JSON.parse(jsonFile);
 
   useFrame(() => {
-    const currentAudioTime = audio.currentTime;
-    if (audio.paused || audio.ended) {
-      setAnimation("Idle");
-      return;
-    }
+    const currentAudioTime = Date.now() - startTime;
+    const lipsync = { visemes }
 
-    Object.values(corresponding).forEach((value) => {
+    Object.values(mapping).forEach((value) => {
       if (!smoothMorphTarget) {
         nodes.Wolf3D_Head.morphTargetInfluences[
           nodes.Wolf3D_Head.morphTargetDictionary[value]
@@ -82,32 +153,32 @@ export function Avatar(props) {
       }
     });
 
-    for (let i = 0; i < lipsync.mouthCues.length; i++) {
-      const mouthCue = lipsync.mouthCues[i];
+    for (let i = 0; i < lipsync.visemes.length; i++) {
+      const mouthCue = lipsync.visemes[i];
       if (
-        currentAudioTime >= mouthCue.start &&
-        currentAudioTime <= mouthCue.end
+        currentAudioTime >= mouthCue.time &&
+        currentAudioTime <= mouthCue.time + 100
       ) {
         if (!smoothMorphTarget) {
           nodes.Wolf3D_Head.morphTargetInfluences[
             nodes.Wolf3D_Head.morphTargetDictionary[
-              corresponding[mouthCue.value]
+              mapping[mouthCue.value]
             ]
           ] = 1;
           nodes.Wolf3D_Teeth.morphTargetInfluences[
             nodes.Wolf3D_Teeth.morphTargetDictionary[
-              corresponding[mouthCue.value]
+              mapping[mouthCue.value]
             ]
           ] = 1;
         } else {
           nodes.Wolf3D_Head.morphTargetInfluences[
             nodes.Wolf3D_Head.morphTargetDictionary[
-              corresponding[mouthCue.value]
+              mapping[mouthCue.value]
             ]
           ] = THREE.MathUtils.lerp(
             nodes.Wolf3D_Head.morphTargetInfluences[
               nodes.Wolf3D_Head.morphTargetDictionary[
-                corresponding[mouthCue.value]
+                mapping[mouthCue.value]
               ]
             ],
             1,
@@ -115,12 +186,12 @@ export function Avatar(props) {
           );
           nodes.Wolf3D_Teeth.morphTargetInfluences[
             nodes.Wolf3D_Teeth.morphTargetDictionary[
-              corresponding[mouthCue.value]
+              mapping[mouthCue.value]
             ]
           ] = THREE.MathUtils.lerp(
             nodes.Wolf3D_Teeth.morphTargetInfluences[
               nodes.Wolf3D_Teeth.morphTargetDictionary[
-                corresponding[mouthCue.value]
+                mapping[mouthCue.value]
               ]
             ],
             1,
@@ -251,3 +322,24 @@ export function Avatar(props) {
 }
 
 useGLTF.preload("/models/646d9dcdc8a5f5bddbfac913.glb");
+
+function onSpeechData(data) {
+  if (removeLastSentence) {
+    resultText.lastElementChild.remove();
+  }
+  removeLastSentence = true;
+
+  //add empty span
+  // let empty = document.createElement('span');
+  // resultText.appendChild(empty);
+
+  // //add children to empty span
+  // let edit = addTimeSettingsInterim(data);
+
+  // for (var i = 0; i < edit.length; i++) {
+  //   resultText.lastElementChild.appendChild(edit[i]);
+  //   resultText.lastElementChild.appendChild(
+  //       document.createTextNode('\u00A0')
+  //   );
+  // }
+}
