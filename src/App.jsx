@@ -43,6 +43,7 @@ function Speaker({id, language, prompt}) {
           if (evt.type !== "original") return
           if (evt.isFinal) {
             setHistory(history => history.push(evt.content))
+            setPartial('')
           } else {
             setPartial(evt.content)
           }
