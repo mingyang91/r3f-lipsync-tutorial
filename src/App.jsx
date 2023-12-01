@@ -5,6 +5,7 @@ import { speakerStream } from "./utils/speaker-stream";
 import { createRecorder } from './utils/recorder'
 import { from, mergeMap } from 'rxjs'
 import { List } from 'immutable'
+import { listenerStream } from "../utils/listener-stream"
 
 function App() {
   const uri = new URL(location)
@@ -17,10 +18,11 @@ function App() {
       prompt={uri.searchParams.get('prompt')}
     />)
   } else if (mode === "listener") {
+    const ws$ = listenerStream()
     return (
       <Canvas shadows camera={{ position: [0, 0, 8], fov: 42 }}>
         <color attach="background" args={["#ececec"]} />
-        <Experience />
+        <Experience subject={ws$} />
       </Canvas>
     );
   }

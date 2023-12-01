@@ -4,13 +4,12 @@ Command: npx gltfjsx@6.2.3 public/models/646d9dcdc8a5f5bddbfac913.glb -o src/com
 */
 
 import { useAnimations, useFBX, useGLTF } from "@react-three/drei";
-import { useFrame, useLoader } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { useControls } from "leva";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import * as THREE from "three";
 import { createAudioPlaySubject } from "../utils/player";
-import { listenerStream } from "../utils/listener-stream"
 
 const mapping = {
   "@": "viseme_sil",    // This usually represents a schwa or neutral vowel. Mapping to silence as a neutral position.
@@ -64,42 +63,32 @@ const mapping = {
 
 export function Avatar(props) {
   const {
-    startRecording,
     startListening,
-    playAudio,
-    script,
     headFollow,
     smoothMorphTarget,
     morphTargetSmoothing,
   } = useControls({
-    startRecording: false,
     startListening: false,
-    playAudio: false,
     headFollow: true,
     smoothMorphTarget: true,
-    morphTargetSmoothing: 0.5,
-    script: {
-      value: "welcome",
-      options: ["welcome", "pizzas", "example"],
-    },
+    morphTargetSmoothing: 0.25,
   });
 
-  const audio = useMemo(() => new Audio(`/audios/${script}.mp3`), [script]);
   const [visemes, setVisemes] = useState([]);
   const [startTime, setStartTime] = useState(Date.now());
   useEffect(() => {
     if (startListening) {
-      const player$ = createAudioPlaySubject()
-      const ws$ = listenerStream()
-      ws$.subscribe({
+      const player$ = createAudioPlaySubject();
+      const ws$ = props.subject
+      const subscription = ws$.subscribe({
         next(msg) { 
           if (msg.data instanceof Blob) {
             player$.next(msg.data)
           } else {
               const evt = JSON.parse(msg.data)
-              if (evt.type === 'Translation') {
+              if (evt.type === 'Translate') {
                   console.log("translation:", evt.content)
-              } else if (evt.type === 'original') {
+              } else if (evt.type === 'Transcript') {
                   console.log("transcription:", evt.content)
               } else {
                 setVisemes(evt.visemes)
@@ -109,14 +98,12 @@ export function Avatar(props) {
         }
       })
       return () => {
-        ws$.unsubscribe()
+        subscription.unsubscribe()
         player$.unsubscribe()
       }
     }
   }, [startListening]);
 
-  const jsonFile = useLoader(THREE.FileLoader, `audios/${script}.json`);
-  const lipsync = JSON.parse(jsonFile);
 
   useFrame(() => {
     const currentAudioTime = Date.now() - startTime;
@@ -203,26 +190,6 @@ export function Avatar(props) {
       }
     }
   });
-
-  useEffect(() => {
-    nodes.Wolf3D_Head.morphTargetInfluences[
-      nodes.Wolf3D_Head.morphTargetDictionary["viseme_I"]
-    ] = 1;
-    nodes.Wolf3D_Teeth.morphTargetInfluences[
-      nodes.Wolf3D_Teeth.morphTargetDictionary["viseme_I"]
-    ] = 1;
-    if (playAudio) {
-      audio.play();
-      if (script === "welcome") {
-        setAnimation("Greeting");
-      } else {
-        setAnimation("Angry");
-      }
-    } else {
-      setAnimation("Idle");
-      audio.pause();
-    }
-  }, [playAudio, script]);
 
   const { nodes, materials } = useGLTF("/models/646d9dcdc8a5f5bddbfac913.glb");
   const { animations: idleAnimation } = useFBX("/animations/Idle.fbx");
