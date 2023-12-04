@@ -5,7 +5,7 @@ import { speakerStream } from "./utils/speaker-stream";
 import { createRecorder } from './utils/recorder'
 import { from, mergeMap } from 'rxjs'
 import { List } from 'immutable'
-import { listenerStream } from "../utils/listener-stream"
+import { listenerStream } from "./utils/listener-stream"
 
 function App() {
   const uri = new URL(location)
