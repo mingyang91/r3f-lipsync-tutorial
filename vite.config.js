@@ -24,7 +24,8 @@ export default defineConfig({
         format: 'es',
         inlineDynamicImports: false
       },
-      external: Object.keys(pkg.dependencies)
+      // ??? BRO, WHAT'S WRONG WITH YOU ???
+      external: ['react-dom/client', ...Object.keys(pkg.dependencies)]
     }
   },
 })

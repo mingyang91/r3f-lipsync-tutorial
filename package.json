@@ -12,7 +12,9 @@
   "exports": {
     "default": "./ejs/lip-sync.js"
   },
-  "files": ["ejs"],
+  "files": [
+    "ejs"
+  ],
   "dependencies": {
     "@react-three/drei": "9.75.0",
     "@react-three/fiber": "8.13.3",
