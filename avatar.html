@@ -1,17 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
-  </head>
-  <body>
-		<h1>Avatar Component</h1>
-    <div id="root" style="height: 320px; width: 320px;"></div>
-		<script type="module">
-			import { render } from '/src/LipSync.jsx'
-			render(document.getElementById('root'))
-		</script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vite + React</title>
+</head>
+
+<body>
+  <h1>Avatar Component</h1>
+  <div id="root" style="height: 320px; width: 320px;"></div>
+  <script type="module">
+    import { render } from '/src/LipSync.jsx'
+    const subject = render(document.getElementById('root'))
+    const mapping = {
+      "@": "viseme_sil",    // This usually represents a schwa or neutral vowel. Mapping to silence as a neutral position.
+      "sil": "viseme_sil",
+      "p": "viseme_PP",
+      "b": "viseme_PP",
+      "m": "viseme_PP",
+      "f": "viseme_FF",
+      "v": "viseme_FF",
+      "T": "viseme_TH",     // Represents "th" in ARPAbet
+      "dh": "viseme_TH",
+      "t": "viseme_DD",
+      "d": "viseme_DD",
+      "k": "viseme_kk",
+      "g": "viseme_kk",
+      "ng": "viseme_kk",
+      "ch": "viseme_CH",
+      "j": "viseme_CH",
+      "s": "viseme_SS",
+      "z": "viseme_SS",
+      "sh": "viseme_SS",
+      "zh": "viseme_SS",
+      "n": "viseme_nn",
+      "r": "viseme_RR",
+      "er": "viseme_RR",
+      "a": "viseme_aa",
+      "aa": "viseme_aa",
+      "ax": "viseme_aa",
+      "ah": "viseme_aa",
+      "ae": "viseme_E",
+      "ey": "viseme_E",
+      "eh": "viseme_E",
+      "ih": "viseme_I",
+      "ix": "viseme_I",
+      "aw": "viseme_O",
+      "ow": "viseme_O",
+      "ao": "viseme_O",
+      "oy": "viseme_O",
+      "uw": "viseme_U",
+      "uh": "viseme_U",
+      "w": "viseme_U",
+      "y": "viseme_U",
+      "o": "viseme_O",     // Based on the sound of the phoneme
+      "e": "viseme_E",     // Based on the sound of the phoneme
+      "S": "viseme_SS",    // Represents "sh" in ARPAbet
+      "u": "viseme_U",     // Based on the sound of the phoneme
+      "E": "viseme_E",     // Based on the sound of the phoneme
+      "i": "viseme_I"      // Based on the sound of the phoneme
+    }
+
+    async function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+    async function random_animation() {
+      while (true) {
+        const viseme = Object.keys(mapping)[Math.floor(Math.random() * Object.keys(mapping).length)]
+        const data = JSON.stringify({
+            visemes: [
+              {
+                value: viseme,
+                time: 50
+              }
+            ]
+        })
+        subject.next({ data })
+        await sleep(200)
+      }
+    }
+    random_animation()
+  </script>
+</body>
+
 </html>

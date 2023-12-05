@@ -68,7 +68,7 @@ export function Avatar(props) {
     smoothMorphTarget,
     morphTargetSmoothing,
   } = useControls({
-    startListening: false,
+    startListening: !!props.startListening,
     headFollow: true,
     smoothMorphTarget: true,
     morphTargetSmoothing: 0.25,
@@ -78,12 +78,12 @@ export function Avatar(props) {
   const [startTime, setStartTime] = useState(Date.now());
   useEffect(() => {
     if (startListening) {
-      const player$ = createAudioPlaySubject();
+      // const player$ = createAudioPlaySubject();
       const ws$ = props.subject
       const subscription = ws$.subscribe({
         next(msg) { 
           if (msg.data instanceof Blob) {
-            player$.next(msg.data)
+            // player$.next(msg.data)
           } else {
               const evt = JSON.parse(msg.data)
               if (evt.type === 'Translate') {
@@ -99,7 +99,7 @@ export function Avatar(props) {
       })
       return () => {
         subscription.unsubscribe()
-        player$.unsubscribe()
+        // player$.unsubscribe()
       }
     }
   }, [startListening]);
@@ -192,30 +192,30 @@ export function Avatar(props) {
   });
 
   const { nodes, materials } = useGLTF("/models/646d9dcdc8a5f5bddbfac913.glb");
-  const { animations: idleAnimation } = useFBX("/animations/Idle.fbx");
-  const { animations: angryAnimation } = useFBX(
-    "/animations/Angry Gesture.fbx"
-  );
-  const { animations: greetingAnimation } = useFBX(
-    "/animations/Standing Greeting.fbx"
-  );
+  // const { animations: idleAnimation } = useFBX("/animations/Idle.fbx");
+  // const { animations: angryAnimation } = useFBX(
+  //   "/animations/Angry Gesture.fbx"
+  // );
+  // const { animations: greetingAnimation } = useFBX(
+  //   "/animations/Standing Greeting.fbx"
+  // );
 
-  idleAnimation[0].name = "Idle";
-  angryAnimation[0].name = "Angry";
-  greetingAnimation[0].name = "Greeting";
+  // idleAnimation[0].name = "Idle";
+  // angryAnimation[0].name = "Angry";
+  // greetingAnimation[0].name = "Greeting";
 
-  const [animation, setAnimation] = useState("Idle");
+  // const [animation, setAnimation] = useState("Idle");
 
   const group = useRef();
-  const { actions } = useAnimations(
-    [idleAnimation[0], angryAnimation[0], greetingAnimation[0]],
-    group
-  );
+  // const { actions } = useAnimations(
+  //   [idleAnimation[0], angryAnimation[0], greetingAnimation[0]],
+  //   group
+  // );
 
-  useEffect(() => {
-    actions[animation].reset().fadeIn(0.5).play();
-    return () => actions[animation].fadeOut(0.5);
-  }, [animation]);
+  // useEffect(() => {
+  //   actions[animation].reset().fadeIn(0.5).play();
+  //   return () => actions[animation].fadeOut(0.5);
+  // }, [animation]);
 
   // CODE ADDED AFTER THE TUTORIAL (but learnt in the portfolio tutorial ♥️)
   useFrame((state) => {

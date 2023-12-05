@@ -9,7 +9,7 @@ export const Experience = (props) => {
   return (
     <>
       <OrbitControls enabled={props.orbitControl}/>
-      <Avatar position={[0, -3, 5]} scale={2} subject={props.subject} />
+      <Avatar position={[0, -3, 5]} scale={2} subject={props.subject} startListening={props.startListening}/>
       <Environment preset="sunset" />
       <mesh>
         <planeGeometry args={[viewport.width, viewport.height]} />

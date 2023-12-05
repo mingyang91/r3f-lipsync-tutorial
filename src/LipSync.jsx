@@ -14,7 +14,7 @@ export function render(target) {
 			<Leva hidden></Leva>
 			<Canvas shadows camera={{ position: [0, 0.5, 8], fov: 21 }}>
         <color attach="background" args={["#ececec"]} />
-				<Experience orbitControl={false} subject={subject} />
+				<Experience orbitControl={false} subject={subject} startListening={true}/>
       </Canvas>
 		</React.StrictMode>,
 	)
