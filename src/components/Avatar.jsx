@@ -86,11 +86,11 @@ export function Avatar(props) {
             // player$.next(msg.data)
           } else {
               const evt = JSON.parse(msg.data)
-              if (evt.type === 'Translate') {
+              if (evt.type === 'translated') {
                   console.log("translation:", evt.content)
-              } else if (evt.type === 'Transcript') {
+              } else if (evt.type === 'original') {
                   console.log("transcription:", evt.content)
-              } else {
+              } else if (evt.type === 'lipSync') {
                 setVisemes(evt.visemes)
                 setStartTime(Date.now())
               }
